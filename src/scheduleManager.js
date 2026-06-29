@@ -1,90 +1,68 @@
 // src/scheduleManager.js
-const fs = require('fs');
-const path = require('path');
-
-const scheduleFilePath = path.join(__dirname, '..', 'schedule.json');
-let schedules = [];
+const API_BASE_URL = 'http://localhost:3000/api/schedules';
+let cachedSchedules = [];
 let alarmWatcher = null;
 
-function loadSchedules() {
+// 🌟 [핵심 변경] 로컬 파일 대신 서버에서 일정을 가져옵니다 (비동기 처리)
+async function fetchSchedulesFromServer() {
   try {
-    if (fs.existsSync(scheduleFilePath)) {
-      schedules = JSON.parse(fs.readFileSync(scheduleFilePath, 'utf-8'));
-      
-      // 🌟 [핵심 해결: 자가 치유 로직] ID가 없는 옛날 '유령 일정'들에 새 고유 번호를 부여합니다!
-      let needsSave = false;
-      schedules = schedules.map(sch => {
-        if (!sch.id) {
-          needsSave = true;
-          // 기존 일정에 현재 시간 기반의 새 고유 ID 발급
-          return { ...sch, id: Date.now() + Math.floor(Math.random() * 10000) }; 
-        }
-        return sch;
-      });
-      if (needsSave) saveSchedules(); // 치유된 데이터를 즉시 저장
-    }
+    const response = await fetch(API_BASE_URL);
+    if (!response.ok) throw new Error('서버 응답 오류');
+    cachedSchedules = await response.json();
+    return cachedSchedules;
   } catch (error) { 
-    console.error("🚨 일정 파일 로딩 실패:", error); 
+    console.error("🚨 서버 일정 로딩 실패:", error); 
+    return cachedSchedules; // 실패 시 기존 캐시 반환
   }
 }
 
-function saveSchedules() {
+// 🌟 getSchedules 함수도 비동기(async)로 변경
+async function getSchedules() {
+  return await fetchSchedulesFromServer();
+}
+
+async function addSchedule(scheduleObj) {
   try {
-    fs.writeFileSync(scheduleFilePath, JSON.stringify(schedules, null, 2), 'utf-8');
-  } catch (error) { 
-    console.error("🚨 일정 파일 저장 실패:", error); 
+    // Rust 서버의 NaiveTime 규격("HH:MM:SS")에 맞추기 위한 포맷팅
+    let timeStr = scheduleObj.time || scheduleObj.alarmTime || null;
+    if (timeStr && timeStr.length === 5) timeStr += ":00";
+
+    await fetch(API_BASE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: scheduleObj.topic || scheduleObj.title || "새 일정", 
+        event_date: scheduleObj.date,
+        event_time: timeStr,
+        location: scheduleObj.location || null,
+        memo: scheduleObj.memo || null
+      })
+    });
+    console.log("서버에 일정이 안전하게 기록되었습니다.");
+  } catch (error) {
+    console.error("🚨 서버 추가 실패:", error);
   }
 }
 
-function addSchedule(scheduleObj) {
-  scheduleObj.id = Date.now(); 
-  schedules.push(scheduleObj);
-  saveSchedules();
-}
-
-function getSchedules() {
-  return schedules;
-}
-
-// 🌟 [안전성 강화] parseInt 대신 String으로 무조건 문자로 변환해서 완벽하게 비교합니다.
-function deleteSchedule(id) {
-  schedules = schedules.filter(sch => String(sch.id) !== String(id));
-  saveSchedules();
-}
-
-function updateSchedule(id, updatedObj) {
-  const index = schedules.findIndex(sch => String(sch.id) === String(id));
-  if (index !== -1) {
-    // 기존 ID를 유지한 채 데이터만 덮어씌웁니다.
-    schedules[index] = { ...schedules[index], ...updatedObj, id: schedules[index].id };
-    saveSchedules();
+// 🌟 클라우드 DB에 삭제 명령 전송 (DELETE)
+async function deleteSchedule(id) {
+  try {
+    await fetch(`${API_BASE_URL}/${id}`, {
+      method: 'DELETE'
+    });
+    console.log(`일정 ID ${id} 삭제 완료`);
+  } catch (error) {
+    console.error("🚨 서버 삭제 실패:", error);
   }
 }
+// 수정 기능 대기 중
+function updateSchedule(id, updatedObj) { console.log("서버 수정 기능 구현 대기 중"); }
 
 function startAlarmWatcher(onAlarmTriggered) {
   if (alarmWatcher) clearInterval(alarmWatcher);
-  alarmWatcher = setInterval(() => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    
-    const currentDateStr = `${year}-${month}-${day}`;
-    const currentTimeStr = `${hours}:${minutes}`;
-
-    schedules.forEach((sch) => {
-      if (sch.isNotified) return;
-      if (sch.date === currentDateStr && sch.alarmTime === currentTimeStr) {
-        sch.isNotified = true;
-        saveSchedules();
-        onAlarmTriggered(sch);
-      }
-    });
+  alarmWatcher = setInterval(async () => {
+    // 알람 기능도 추후 서버 동기화 구조에 맞게 개선할 예정입니다.
   }, 30000);
 }
 
-loadSchedules(); // 모듈 로드 시 자가 치유 로직 바로 가동
-
-module.exports = { addSchedule, getSchedules, deleteSchedule, updateSchedule, startAlarmWatcher };
+module.exports = { addSchedule, getSchedules, deleteSchedule, updateSchedule, startAlarmWatcher, fetchSchedulesFromServer };

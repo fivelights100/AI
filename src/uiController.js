@@ -83,15 +83,31 @@ function typeSubtitle(text) {
   }, 50); 
 }
 
-function renderSchedules() {
+async function renderSchedules() {
   scheduleTbody.innerHTML = '';
-  const schedules = getSchedules();
+  // 데이터가 로딩 중임을 표시 (선택 사항)
+  scheduleTbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">서버에서 일정을 불러오는 중...</td></tr>';
+
+  const schedules = await getSchedules(); // 서버 통신 대기!
+  
+  scheduleTbody.innerHTML = ''; // 로딩 메시지 지우기
+  
+  if (schedules.length === 0) {
+    scheduleTbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">등록된 일정이 없습니다.</td></tr>';
+    return;
+  }
+
   schedules.forEach(sch => {
     const tr = document.createElement('tr');
-    if (sch.isNotified) tr.style.opacity = '0.5'; 
+    // DB 구조체에 맞게 프로퍼티 이름 변경 (date -> event_date, topic -> title 등)
     tr.innerHTML = `
-      <td>${sch.date}</td><td>${sch.time}</td><td>${sch.location}</td>
-      <td>${sch.topic}</td><td>${sch.duration}</td><td>${sch.alarmTime}</td><td>${sch.memo}</td>
+      <td>${sch.event_date || '-'}</td>
+      <td>${sch.event_time || '-'}</td>
+      <td>${sch.location || '-'}</td>
+      <td>${sch.title || '-'}</td>
+      <td>-</td>
+      <td>-</td>
+      <td>${sch.memo || '-'}</td>
       <td><button class="delete-sch-btn" data-id="${sch.id}" style="background:#ff5252; border:none; padding:5px 10px; color:white; border-radius:5px; cursor:pointer;">삭제</button></td>
     `;
     scheduleTbody.appendChild(tr);
@@ -245,12 +261,18 @@ function initUI() {
   cloudApiKeyInput.addEventListener('input', (e) => { appSettings.cloudApiKey = e.target.value; saveSettings(); });
 
   // 대시보드(통합 메뉴) 제어
-  scheduleTbody.addEventListener('click', (e) => {
-    if (e.target.classList.contains('delete-sch-btn')) {
-      deleteSchedule(e.target.getAttribute('data-id'));
-      renderSchedules();
-    }
-  });
+  scheduleTbody.addEventListener('click', async (e) => {
+  if (e.target.classList.contains('delete-sch-btn')) {
+    e.target.textContent = '삭제 중...'; // 사용자 시각적 피드백
+    e.target.disabled = true;
+
+    // 서버에 삭제 요청을 보내고 끝날 때까지 기다림 (await)
+    await deleteSchedule(e.target.getAttribute('data-id'));
+    
+    // 삭제가 반영된 클라우드의 최신 데이터를 다시 불러와서 그림 (await)
+    await renderSchedules();
+  }
+});
   dashboardBtn.addEventListener('click', () => {
     settingsPanel.style.display = 'none';
     advancedModal.style.display = 'none';
