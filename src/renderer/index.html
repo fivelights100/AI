@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>내 동반자</title>
+  
+  <link rel="stylesheet" href="./styles/index.css">
+  
+  <script src="https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/6.5.2/browser/pixi.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pixi-live2d-display/dist/cubism4.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands@0.4.0/dist/speech-commands.min.js"></script>
+</head>
+<body>
+
+  <canvas id="canvas"></canvas>
+
+  <div id="ui-container">
+    <div id="subtitle-box">시스템을 동기화하고 있어...</div>
+    <div id="input-container">
+      <input type="text" id="chat-input" placeholder="여기에 대화를 입력하고 Enter를 누르세요..." autocomplete="off">
+    </div>
+    <button id="dashboard-btn" class="dashboard-btn">메뉴</button>
+  </div>
+
+  <div id="unified-dashboard" class="dashboard-overlay hidden">
+        <div class="dashboard-container">
+            <!-- 상단 탭 -->
+            <header class="dashboard-header">
+                <div class="dashboard-tabs">
+                    <button class="tab-btn active" data-target="tab-manage">관리</button>
+                    <button class="tab-btn" data-target="tab-settings">설정</button>
+                    <button class="tab-btn" data-target="tab-info">정보</button>
+                </div>
+                <button id="close-dashboard" class="close-btn">&times;</button>
+            </header>
+
+            <!-- 본문 영역 -->
+            <div class="dashboard-body">
+                
+                <!-- 1. 관리 탭 -->
+                <div id="tab-manage" class="tab-content active">
+                    <aside class="sidebar">
+                        <button class="sub-btn active" data-target="manage-history">대화 목록</button>
+                        <button class="sub-btn" data-target="manage-schedule">일정 목록</button>
+                    </aside>
+                    <main class="main-content">
+                        <div id="manage-history" class="sub-content active">
+                            <h2>대화 목록</h2>
+                            <div id="history-list-container" class="scrollable-area">
+                                <!-- memory.json의 대화 내용이 예쁘게 들어갈 자리 -->
+                            </div>
+                        </div>
+                        <div id="manage-schedule" class="sub-content hidden">
+                            <h2>나의 일정</h2>
+                            <div id="schedule-list-container" class="scrollable-area">
+                                <!-- 서버에서 받아온 일정이 들어갈 자리 -->
+                            </div>
+                        </div>
+                    </main>
+                </div>
+
+                <!-- 2. 설정 탭 -->
+                <div id="tab-settings" class="tab-content hidden">
+                    <aside class="sidebar">
+                        <button class="sub-btn active" data-target="settings-display">화면</button>
+                        <button class="sub-btn" data-target="settings-sound">소리</button>
+                        <button class="sub-btn" data-target="settings-system">시스템</button>
+                    </aside>
+                    <main class="main-content">
+                        <div id="settings-display" class="sub-content active">
+                            <h2>화면 설정</h2>
+                            <p>창 투명도, 배경 테마 등 시각적인 설정을 관리합니다.</p>
+                        </div>
+                        <div id="settings-sound" class="sub-content hidden">
+                            <h2>소리 설정</h2>
+                            <p>음량, 효과음 등 청각적인 설정을 관리합니다.</p>
+                        </div>
+                        <div id="settings-system" class="sub-content hidden">
+                            <h2>시스템 설정</h2>
+                            <p>서버 연동 상태와 기본 시스템 상태를 확인합니다.</p>
+
+                            <div class="setting-row">
+                                <label for="server-url-input">서버 주소</label>
+                                <input id="server-url-input" type="text" placeholder="http://localhost:3000">
+                                <button id="save-server-url-btn">저장</button>
+                                <button id="refresh-status-btn">상태 확인</button>
+                            </div>
+
+                            <div id="system-status-container" class="system-status-container">
+                                <p>상태 확인 버튼을 누르면 서버 상태가 표시됩니다.</p>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+
+                <!-- 3. 정보 탭 (사이드바 없이 전체 화면) -->
+                <div id="tab-info" class="tab-content no-sidebar hidden">
+                    <main class="main-content full-width">
+                        <h2>동반자 조작 안내</h2>
+                        <ul class="info-list">
+                            <li><strong>우클릭:</strong> 현재 보고 계신 대시보드 창을 엽니다.</li>
+                            <li><strong>좌클릭 드래그:</strong> 캐릭터의 위치를 자유롭게 이동시킵니다.</li>
+                            <li><strong>대화:</strong> 하단 마이크 버튼이나 채팅창을 통해 AI와 소통합니다.</li>
+                        </ul>
+                    </main>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+  <script src="./ui/dashboard.js"></script>
+  <script src="./renderer.js"></script>
+  
+</body>
+</html>

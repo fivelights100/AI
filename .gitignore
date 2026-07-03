@@ -2,7 +2,7 @@
 node_modules/
 .env
 
-# 개인 데이터베이스 파일들도 업로드 제외 (선택 사항이지만 강력 권장)
+# 개인 파일
 schedule.json
 settings.json
 memory.json

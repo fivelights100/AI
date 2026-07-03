@@ -1,10 +1,14 @@
 {
   "name": "ai",
   "version": "1.0.0",
-  "description": "",
-  "main": "main.js",
+  "description": "Desktop AI companion client",
+  "main": "src/main/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "electron .",
+    "check:syntax": "node scripts/check-syntax.js",
+    "check": "npm run check:syntax",
+    "start:debug": "node scripts/start-debug.js",
+    "pack:zip": "powershell -ExecutionPolicy Bypass -File scripts/pack-clean.ps1"
   },
   "keywords": [],
   "author": "",
@@ -13,9 +17,5 @@
   "devDependencies": {
     "electron": "^42.3.3"
   },
-  "dependencies": {
-    "dotenv": "^17.4.2",
-    "exceljs": "^4.4.0",
-    "xlsx": "^0.18.5"
-  }
+  "dependencies": {}
 }
