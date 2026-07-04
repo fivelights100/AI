@@ -8,6 +8,8 @@ const { initWakeWordListener } = require('./speech/sttEngine');
 const {
   initUI,
   openDashboard,
+  closeDashboard,
+  isDashboardOpen,
   typeSubtitle,
   renderSchedules,
   uiElementsToBlock,
@@ -38,19 +40,33 @@ initCharacterEngine(modelUrl, uiElementsToBlock, {
   onHideSettings: () => {},
 });
 
+function showChatInput() {
+  ipcRenderer.send('set-focusable', true);
+  inputContainer.style.display = 'block';
+  chatInput.focus();
+  ipcRenderer.send('set-ignore-mouse-events', false);
+}
+
+function hideChatInput() {
+  inputContainer.style.display = 'none';
+  chatInput.blur();
+  ipcRenderer.send('set-focusable', false);
+  ipcRenderer.send('set-ignore-mouse-events', true, { forward: true });
+}
+
 ipcRenderer.on('toggle-chat', () => {
+  if (isDashboardOpen()) {
+    closeDashboard();
+    showChatInput();
+    return;
+  }
+
   const isHidden = inputContainer.style.display === 'none' || inputContainer.style.display === '';
 
   if (isHidden) {
-    ipcRenderer.send('set-focusable', true);
-    inputContainer.style.display = 'block';
-    chatInput.focus();
-    ipcRenderer.send('set-ignore-mouse-events', false);
+    showChatInput();
   } else {
-    inputContainer.style.display = 'none';
-    chatInput.blur();
-    ipcRenderer.send('set-focusable', false);
-    ipcRenderer.send('set-ignore-mouse-events', true, { forward: true });
+    hideChatInput();
   }
 });
 
@@ -62,8 +78,7 @@ chatInput.addEventListener('keydown', (event) => {
 
   chatInput.value = '';
   subtitleBox.textContent = '생각하는 중...';
-  inputContainer.style.display = 'none';
-  ipcRenderer.send('set-focusable', false);
+  hideChatInput();
 
   processUserMessage(userText, renderSchedules, typeSubtitle);
 });

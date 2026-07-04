@@ -38,10 +38,34 @@ function initCharacterEngine(modelUrl, uiElements = [], callbacks = {}) {
 }
 
 function applySavedTransform(model) {
-  model.scale.set(appSettings.scale);
-  model.rotation = degreesToRadians(appSettings.rotation);
+  applyCharacterSettings(model);
   model.position.set(appSettings.posX, appSettings.posY);
   model.interactive = true;
+}
+
+function applyCharacterSettings(targetModel = modelRef) {
+  const opacity = clamp01(appSettings.opacity);
+  applyCanvasOpacity(opacity);
+
+  if (!targetModel) return;
+
+  targetModel.scale.set(appSettings.scale);
+  targetModel.rotation = degreesToRadians(appSettings.rotation);
+
+  // Live2DModel.alpha may be ignored or reset internally depending on the
+  // pixi-live2d-display runtime path. Keep the model/stage fully opaque and
+  // apply the user-facing opacity to the dedicated character canvas instead.
+  targetModel.alpha = 1;
+  if (pixiApp?.stage) {
+    pixiApp.stage.alpha = 1;
+  }
+}
+
+function applyCanvasOpacity(opacity) {
+  const canvas = document.getElementById('canvas');
+  if (!canvas) return;
+
+  canvas.style.opacity = String(opacity);
 }
 
 function setupMouseEvents(uiElements, callbacks) {
@@ -168,4 +192,5 @@ function clamp01(value) {
 module.exports = {
   initCharacterEngine,
   updateLipSync,
+  applyCharacterSettings,
 };

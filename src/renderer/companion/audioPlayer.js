@@ -1,11 +1,13 @@
 const { createLipSyncController } = require('./lipSync');
 
 let audioContext = null;
+const activeMasterGains = new Set();
 
 async function playAudioWithLipSync(audioBase64, updateLipSync, options = {}) {
   if (!audioBase64) return;
 
   let lipSyncController = null;
+  let masterGain = null;
 
   try {
     const context = getAudioContext();
@@ -15,14 +17,20 @@ async function playAudioWithLipSync(audioBase64, updateLipSync, options = {}) {
     const source = context.createBufferSource();
     const analyser = context.createAnalyser();
 
+    masterGain = context.createGain();
+    masterGain.gain.value = clamp01(options.volume ?? 1);
+    activeMasterGains.add(masterGain);
+
     source.buffer = audioBuffer;
-    source.connect(context.destination);
+    source.connect(masterGain);
+    masterGain.connect(context.destination);
     source.connect(analyser);
 
     lipSyncController = createLipSyncController(analyser, updateLipSync, options.lipSync);
 
     source.onended = () => {
       lipSyncController?.stop();
+      activeMasterGains.delete(masterGain);
     };
 
     source.start();
@@ -30,8 +38,17 @@ async function playAudioWithLipSync(audioBase64, updateLipSync, options = {}) {
   } catch (error) {
     console.error('🚨 음성 재생 오류:', error);
     lipSyncController?.stop();
+    if (masterGain) activeMasterGains.delete(masterGain);
     updateLipSync?.(0);
   }
+}
+
+function setActiveMasterVolume(volume) {
+  const nextVolume = clamp01(volume);
+
+  activeMasterGains.forEach((gainNode) => {
+    gainNode.gain.value = nextVolume;
+  });
 }
 
 function getAudioContext() {
@@ -60,4 +77,10 @@ async function decodeBase64Audio(context, audioBase64) {
   return context.decodeAudioData(bytes.buffer);
 }
 
-module.exports = { playAudioWithLipSync };
+function clamp01(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return 1;
+  return Math.max(0, Math.min(1, number));
+}
+
+module.exports = { playAudioWithLipSync, setActiveMasterVolume };

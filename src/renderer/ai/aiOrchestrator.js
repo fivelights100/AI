@@ -40,7 +40,8 @@ async function processUserMessage(userText, renderSchedules, typeSubtitle) {
 
     if (data.audio_base64) {
       await playAudioWithLipSync(data.audio_base64, updateLipSync, {
-        lipSync: { sensitivity: appSettings.lipsyncSensitivity },
+        volume: appSettings.volume,
+        lipSync: { getSensitivity: () => appSettings.lipSyncSensitivity },
       });
     }
   } catch (error) {

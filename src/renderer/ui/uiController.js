@@ -1,5 +1,20 @@
 const { ipcRenderer } = require('electron');
-const { chatHistory } = require('../storage/configManager');
+const {
+  chatHistory,
+  clearChatHistory,
+  getCharacterScalePercent,
+  setCharacterScalePercent,
+  getCharacterRotationDegrees,
+  setCharacterRotationDegrees,
+  getCharacterOpacityPercent,
+  setCharacterOpacityPercent,
+  getMasterVolumePercent,
+  setMasterVolumePercent,
+  getLipSyncSensitivity,
+  setLipSyncSensitivity,
+} = require('../storage/configManager');
+const { applyCharacterSettings } = require('../companion/characterEngine');
+const { setActiveMasterVolume } = require('../companion/audioPlayer');
 const { getSchedules, deleteSchedule } = require('../schedules/scheduleClient');
 const { fetchServerStatus } = require('../system/serverStatusClient');
 const { getServerBaseUrl, setServerBaseUrl } = require('../config/appConfig');
@@ -8,21 +23,30 @@ const { escapeHtml } = require('../shared/html');
 const subtitleBox = document.getElementById('subtitle-box');
 const inputContainer = document.getElementById('input-container');
 const chatInput = document.getElementById('chat-input');
-const dashboardBtn = document.getElementById('dashboard-btn');
 const dashboardOverlay = document.getElementById('unified-dashboard');
 const closeDashboardBtn = document.getElementById('close-dashboard');
+const clearHistoryBtn = document.getElementById('clear-history-btn');
 const historyListContainer = document.getElementById('history-list-container');
 const scheduleListContainer = document.getElementById('schedule-list-container');
 const systemStatusContainer = document.getElementById('system-status-container');
 const serverUrlInput = document.getElementById('server-url-input');
 const saveServerUrlBtn = document.getElementById('save-server-url-btn');
 const refreshStatusBtn = document.getElementById('refresh-status-btn');
+const characterScaleInput = document.getElementById('character-scale-input');
+const characterScaleValue = document.getElementById('character-scale-value');
+const characterRotationInput = document.getElementById('character-rotation-input');
+const characterRotationValue = document.getElementById('character-rotation-value');
+const characterOpacityInput = document.getElementById('character-opacity-input');
+const characterOpacityValue = document.getElementById('character-opacity-value');
+const masterVolumeInput = document.getElementById('master-volume-input');
+const masterVolumeValue = document.getElementById('master-volume-value');
+const lipSyncSensitivityInput = document.getElementById('lip-sync-sensitivity-input');
+const lipSyncSensitivityValue = document.getElementById('lip-sync-sensitivity-value');
 
 const uiElementsToBlock = [
   subtitleBox,
   inputContainer,
   chatInput,
-  dashboardBtn,
   dashboardOverlay,
 ];
 
@@ -147,13 +171,74 @@ function closeDashboard() {
   ipcRenderer.send('set-ignore-mouse-events', true, { forward: true });
 }
 
+function isDashboardOpen() {
+  return Boolean(dashboardOverlay && !dashboardOverlay.classList.contains('hidden'));
+}
+
+function clearHistory() {
+  clearChatHistory();
+  renderHistory();
+  typeSubtitle('대화 기록을 비웠어.');
+}
+
+
+function initSettingsControls() {
+  bindRangeControl(characterScaleInput, characterScaleValue, getCharacterScalePercent(), '%', (value) => {
+    const nextValue = setCharacterScalePercent(value);
+    applyCharacterSettings();
+    return nextValue;
+  });
+
+  bindRangeControl(characterRotationInput, characterRotationValue, getCharacterRotationDegrees(), '°', (value) => {
+    const nextValue = setCharacterRotationDegrees(value);
+    applyCharacterSettings();
+    return nextValue;
+  });
+
+  bindRangeControl(characterOpacityInput, characterOpacityValue, getCharacterOpacityPercent(), '%', (value) => {
+    const nextValue = setCharacterOpacityPercent(value);
+    applyCharacterSettings();
+    return nextValue;
+  });
+
+  bindRangeControl(masterVolumeInput, masterVolumeValue, getMasterVolumePercent(), '%', (value) => {
+    const nextValue = setMasterVolumePercent(value);
+    setActiveMasterVolume(nextValue / 100);
+    return nextValue;
+  });
+
+  bindRangeControl(lipSyncSensitivityInput, lipSyncSensitivityValue, getLipSyncSensitivity(), '', (value) => {
+    return setLipSyncSensitivity(Number(value));
+  }, 1);
+}
+
+function bindRangeControl(input, label, initialValue, suffix, onChange, decimals = 0) {
+  if (!input || !label) return;
+
+  updateRangeControl(input, label, initialValue, suffix, decimals);
+
+  input.addEventListener('input', () => {
+    const nextValue = onChange(input.value);
+    updateRangeControl(input, label, nextValue, suffix, decimals);
+  });
+}
+
+function updateRangeControl(input, label, value, suffix, decimals = 0) {
+  const displayValue = decimals > 0 ? Number(value).toFixed(decimals) : String(Math.round(Number(value)));
+
+  input.value = displayValue;
+  label.textContent = `${displayValue}${suffix}`;
+}
+
 function initUI() {
   if (serverUrlInput) {
     serverUrlInput.value = getServerBaseUrl();
   }
 
-  dashboardBtn?.addEventListener('click', openDashboard);
+  initSettingsControls();
+
   closeDashboardBtn?.addEventListener('click', closeDashboard);
+  clearHistoryBtn?.addEventListener('click', clearHistory);
 
   dashboardOverlay?.addEventListener('click', (event) => {
     if (event.target === dashboardOverlay) {
@@ -185,6 +270,7 @@ module.exports = {
   initUI,
   openDashboard,
   closeDashboard,
+  isDashboardOpen,
   typeSubtitle,
   renderSchedules,
   renderHistory,
