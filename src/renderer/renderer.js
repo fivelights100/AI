@@ -12,6 +12,7 @@ const {
   isDashboardOpen,
   typeSubtitle,
   renderSchedules,
+  renderLedgerEntries,
   uiElementsToBlock,
   chatInput,
   inputContainer,
@@ -80,7 +81,7 @@ chatInput.addEventListener('keydown', (event) => {
   subtitleBox.textContent = '생각하는 중...';
   hideChatInput();
 
-  processUserMessage(userText, renderSchedules, typeSubtitle);
+  processUserMessage(userText, { renderSchedules, renderLedgerEntries }, typeSubtitle);
 });
 
 initWakeWordListener(
@@ -91,7 +92,7 @@ initWakeWordListener(
   (transcribedText) => {
     if (transcribedText) {
       subtitleBox.textContent = '생각하는 중...';
-      processUserMessage(transcribedText, renderSchedules, typeSubtitle);
+      processUserMessage(transcribedText, { renderSchedules, renderLedgerEntries }, typeSubtitle);
     } else {
       typeSubtitle('응? 잘 못 들었어. 다시 말해줄래?');
     }

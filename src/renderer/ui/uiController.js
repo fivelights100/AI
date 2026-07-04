@@ -16,6 +16,7 @@ const {
 const { applyCharacterSettings } = require('../companion/characterEngine');
 const { setActiveMasterVolume } = require('../companion/audioPlayer');
 const { getSchedules, deleteSchedule } = require('../schedules/scheduleClient');
+const { getLedgerEntries, deleteLedgerEntry } = require('../ledger/ledgerClient');
 const { fetchServerStatus } = require('../system/serverStatusClient');
 const { getServerBaseUrl, setServerBaseUrl } = require('../config/appConfig');
 const { escapeHtml } = require('../shared/html');
@@ -28,6 +29,7 @@ const closeDashboardBtn = document.getElementById('close-dashboard');
 const clearHistoryBtn = document.getElementById('clear-history-btn');
 const historyListContainer = document.getElementById('history-list-container');
 const scheduleListContainer = document.getElementById('schedule-list-container');
+const ledgerListContainer = document.getElementById('ledger-list-container');
 const systemStatusContainer = document.getElementById('system-status-container');
 const serverUrlInput = document.getElementById('server-url-input');
 const saveServerUrlBtn = document.getElementById('save-server-url-btn');
@@ -109,6 +111,54 @@ async function renderSchedules() {
   `).join('');
 }
 
+async function renderLedgerEntries() {
+  if (!ledgerListContainer) return;
+
+  ledgerListContainer.innerHTML = '<p>서버에서 가계부를 불러오는 중...</p>';
+  const entries = await getLedgerEntries();
+
+  if (!entries.length) {
+    ledgerListContainer.innerHTML = '<p>등록된 가계부 기록이 없습니다.</p>';
+    return;
+  }
+
+  ledgerListContainer.innerHTML = entries.map((entry) => {
+    const typeLabel = entry.entry_type === 'income' ? '수입' : '지출';
+    const amount = formatCurrency(entry.amount);
+    const settledLabel = formatSettlement(entry.is_settled);
+    const people = entry.people ? escapeHtml(entry.people) : '-';
+    const place = entry.place ? escapeHtml(entry.place) : '-';
+    const memo = entry.memo ? escapeHtml(entry.memo) : '-';
+    const category = entry.category ? escapeHtml(entry.category) : '미분류';
+
+    return `
+      <div class="ledger-item ${entry.entry_type === 'income' ? 'income' : 'expense'}">
+        <div class="ledger-item-header">
+          <strong>[${typeLabel}] ${amount} · ${category}</strong>
+          <span>${entry.entry_date || ''} ${entry.entry_time || ''}</span>
+        </div>
+        <p>장소: ${place}</p>
+        <p>인원: ${people}</p>
+        <p>정산: ${settledLabel}</p>
+        <p>메모: ${memo}</p>
+        <button class="delete-ledger-btn" data-id="${entry.id}">삭제</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function formatCurrency(amount) {
+  const number = Number(amount);
+  if (!Number.isFinite(number)) return '-원';
+  return `${number.toLocaleString('ko-KR')}원`;
+}
+
+function formatSettlement(value) {
+  if (value === true) return '정산 완료';
+  if (value === false) return '미정산';
+  return '해당 없음';
+}
+
 async function renderSystemStatus() {
   if (!systemStatusContainer) return;
 
@@ -160,7 +210,7 @@ async function openDashboard() {
   ipcRenderer.send('set-focusable', true);
   ipcRenderer.send('set-ignore-mouse-events', false);
   renderHistory();
-  await Promise.allSettled([renderSchedules(), renderSystemStatus()]);
+  await Promise.allSettled([renderSchedules(), renderLedgerEntries(), renderSystemStatus()]);
 }
 
 function closeDashboard() {
@@ -256,11 +306,21 @@ function initUI() {
     await renderSchedules();
   });
 
+  ledgerListContainer?.addEventListener('click', async (event) => {
+    if (!event.target.classList.contains('delete-ledger-btn')) return;
+
+    event.target.disabled = true;
+    event.target.textContent = '삭제 중...';
+
+    await deleteLedgerEntry(event.target.dataset.id);
+    await renderLedgerEntries();
+  });
+
   saveServerUrlBtn?.addEventListener('click', async () => {
     const normalizedUrl = setServerBaseUrl(serverUrlInput?.value);
     if (serverUrlInput) serverUrlInput.value = normalizedUrl;
     typeSubtitle('서버 주소를 저장했어. 앱을 재시작하면 Live2D 모델 주소도 새 설정을 사용해.');
-    await Promise.allSettled([renderSchedules(), renderSystemStatus()]);
+    await Promise.allSettled([renderSchedules(), renderLedgerEntries(), renderSystemStatus()]);
   });
 
   refreshStatusBtn?.addEventListener('click', renderSystemStatus);
@@ -273,6 +333,7 @@ module.exports = {
   isDashboardOpen,
   typeSubtitle,
   renderSchedules,
+  renderLedgerEntries,
   renderHistory,
   renderSystemStatus,
   uiElementsToBlock,

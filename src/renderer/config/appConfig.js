@@ -5,6 +5,7 @@ const API_PATHS = {
   status: '/api/status',
   chat: '/api/chat',
   schedules: '/api/schedules',
+  ledger: '/api/ledger',
   stt: '/api/stt',
   model: '/models/hiyori_ex/runtime/hiyori_free_t08.model3.json',
 };

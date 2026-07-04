@@ -123,7 +123,8 @@ body {
 .tab-btn,
 .sub-btn,
 .close-btn,
-.delete-sch-btn {
+.delete-sch-btn,
+.delete-ledger-btn {
   border: 0;
   border-radius: 12px;
   padding: 9px 12px;
@@ -218,7 +219,8 @@ body {
 }
 
 .history-item,
-.schedule-item {
+.schedule-item,
+.ledger-item {
   margin-bottom: 12px;
   padding: 14px;
   border-radius: 16px;
@@ -226,14 +228,41 @@ body {
 }
 
 .history-item p,
-.schedule-item p {
+.schedule-item p,
+.ledger-item p {
   margin: 8px 0 0;
   color: rgba(255, 255, 255, 0.78);
 }
 
-.delete-sch-btn {
+.delete-sch-btn,
+.delete-ledger-btn {
   margin-top: 12px;
   background: rgba(239, 68, 68, 0.72);
+}
+
+.ledger-item {
+  border-left: 4px solid rgba(255, 255, 255, 0.2);
+}
+
+.ledger-item.income {
+  border-left-color: rgba(65, 214, 137, 0.72);
+}
+
+.ledger-item.expense {
+  border-left-color: rgba(248, 113, 113, 0.72);
+}
+
+.ledger-item-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.ledger-item-header span {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 13px;
 }
 
 .info-list {
@@ -265,7 +294,8 @@ body {
 }
 
 .setting-row button,
-.delete-sch-btn {
+.delete-sch-btn,
+.delete-ledger-btn {
   padding: 9px 12px;
   border: 0;
   border-radius: 10px;

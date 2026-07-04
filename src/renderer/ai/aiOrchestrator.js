@@ -21,7 +21,7 @@ function appendMessage(role, content) {
   });
 }
 
-async function processUserMessage(userText, renderSchedules, typeSubtitle) {
+async function processUserMessage(userText, handlers, typeSubtitle) {
   try {
     console.log('📨 Rust 서버로 메시지 전송 중...');
 
@@ -34,8 +34,15 @@ async function processUserMessage(userText, renderSchedules, typeSubtitle) {
 
     if (typeSubtitle) typeSubtitle(reply);
 
+    const renderSchedules = typeof handlers === 'function' ? handlers : handlers?.renderSchedules;
+    const renderLedgerEntries = handlers?.renderLedgerEntries;
+
     if (data.schedule_updated && renderSchedules) {
       await renderSchedules();
+    }
+
+    if (data.ledger_updated && renderLedgerEntries) {
+      await renderLedgerEntries();
     }
 
     if (data.audio_base64) {

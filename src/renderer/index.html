@@ -44,6 +44,7 @@
                     <aside class="sidebar">
                         <button class="sub-btn active" data-target="manage-history">대화 목록</button>
                         <button class="sub-btn" data-target="manage-schedule">일정 목록</button>
+                        <button class="sub-btn" data-target="manage-ledger">가계부</button>
                     </aside>
                     <main class="main-content">
                         <div id="manage-history" class="sub-content active">
@@ -59,6 +60,12 @@
                             <h2>나의 일정</h2>
                             <div id="schedule-list-container" class="scrollable-area">
                                 <!-- 서버에서 받아온 일정이 들어갈 자리 -->
+                            </div>
+                        </div>
+                        <div id="manage-ledger" class="sub-content hidden">
+                            <h2>가계부</h2>
+                            <div id="ledger-list-container" class="scrollable-area">
+                                <!-- 서버에서 받아온 가계부 기록이 들어갈 자리 -->
                             </div>
                         </div>
                     </main>
