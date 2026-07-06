@@ -32,10 +32,18 @@ async function processUserMessage(userText, handlers, typeSubtitle) {
     appendMessage('assistant', reply);
     saveChatHistory();
 
-    if (typeSubtitle) typeSubtitle(reply);
-
     const renderSchedules = typeof handlers === 'function' ? handlers : handlers?.renderSchedules;
     const renderLedgerEntries = handlers?.renderLedgerEntries;
+    const showFileOpenConfirmation = handlers?.showFileOpenConfirmation;
+    const showFileOpenCandidates = handlers?.showFileOpenCandidates;
+
+    if (data.pending_file_open_candidates && typeof showFileOpenCandidates === 'function') {
+      showFileOpenCandidates(data.pending_file_open_candidates);
+    } else if (data.pending_file_open && typeof showFileOpenConfirmation === 'function') {
+      showFileOpenConfirmation(data.pending_file_open);
+    }
+
+    if (typeSubtitle) typeSubtitle(reply);
 
     if (data.schedule_updated && renderSchedules) {
       await renderSchedules();

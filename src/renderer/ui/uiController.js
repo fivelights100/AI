@@ -18,6 +18,8 @@ const { setActiveMasterVolume } = require('../companion/audioPlayer');
 const { getSchedules, deleteSchedule } = require('../schedules/scheduleClient');
 const { getLedgerEntries, deleteLedgerEntry } = require('../ledger/ledgerClient');
 const { fetchServerStatus } = require('../system/serverStatusClient');
+const { fetchFileSearchStatus } = require('../files/fileSearchClient');
+const { fetchNextFileOpenCandidates, confirmFileOpen } = require('../files/fileOpenClient');
 const { getServerBaseUrl, setServerBaseUrl } = require('../config/appConfig');
 const { escapeHtml } = require('../shared/html');
 
@@ -44,15 +46,29 @@ const masterVolumeInput = document.getElementById('master-volume-input');
 const masterVolumeValue = document.getElementById('master-volume-value');
 const lipSyncSensitivityInput = document.getElementById('lip-sync-sensitivity-input');
 const lipSyncSensitivityValue = document.getElementById('lip-sync-sensitivity-value');
+const fileOpenModal = document.getElementById('file-open-modal');
+const fileOpenMessage = document.getElementById('file-open-message');
+const fileOpenCandidateList = document.getElementById('file-open-candidate-list');
+const fileOpenSelectedSummary = document.getElementById('file-open-selected-summary');
+const fileOpenConfirmBtn = document.getElementById('file-open-confirm-btn');
+const fileOpenNextBtn = document.getElementById('file-open-next-btn');
+const fileOpenCancelBtn = document.getElementById('file-open-cancel-btn');
+const fileOpenCloseBtn = document.getElementById('file-open-close-btn');
 
 const uiElementsToBlock = [
   subtitleBox,
   inputContainer,
   chatInput,
   dashboardOverlay,
+  fileOpenModal,
 ];
 
 let typingTimer = null;
+let currentFileOpenCandidate = null;
+let currentFileOpenCandidatePage = null;
+let currentFileOpenRequestToken = 0;
+let fileOpenConfirmInFlight = false;
+let fileOpenNextInFlight = false;
 
 function typeSubtitle(text) {
   clearInterval(typingTimer);
@@ -162,32 +178,82 @@ function formatSettlement(value) {
 async function renderSystemStatus() {
   if (!systemStatusContainer) return;
 
-  systemStatusContainer.innerHTML = '<p>서버 상태를 확인하는 중...</p>';
+  systemStatusContainer.innerHTML = '<p>상태를 확인하는 중...</p>';
 
-  try {
-    const status = await fetchServerStatus();
-    const service = status.services || {};
+  const [serverResult, everythingResult] = await Promise.allSettled([
+    fetchServerStatus(),
+    fetchFileSearchStatus(),
+  ]);
+
+  const serverStatus = serverResult.status === 'fulfilled' ? serverResult.value : null;
+  const everythingStatus = everythingResult.status === 'fulfilled'
+    ? everythingResult.value
+    : { available: false, message: '확인 불가' };
+
+  if (!serverStatus) {
+    const errorMessage = serverResult.reason?.message || '서버에 연결할 수 없습니다.';
 
     systemStatusContainer.innerHTML = `
-      <div class="status-grid">
-        ${renderStatusCard('서버', status.status === 'ok', status.status || 'unknown')}
-        ${renderStatusCard('데이터베이스', status.database?.ok, status.database?.message || 'unknown')}
-        ${renderStatusCard('OpenAI 키', service.openai_api_key, service.openai_api_key ? '설정됨' : '미설정')}
-        ${renderStatusCard('ElevenLabs 키', service.elevenlabs_api_key, service.elevenlabs_api_key ? '설정됨' : '미설정')}
-        ${renderStatusCard('ElevenLabs Voice', service.elevenlabs_voice_id, service.elevenlabs_voice_id ? '설정됨' : '미설정')}
-        ${renderStatusCard('Live2D 모델', status.models?.hiyori_runtime, status.models?.hiyori_runtime ? '확인됨' : '누락')}
-      </div>
-      <p class="status-meta">서버 시간: ${escapeHtml(status.server_time || '-')}</p>
+      ${renderStatusSection('서버', `
+        <div class="status-grid">
+          ${renderStatusCard('서버 상태', false, '연결 실패')}
+          ${renderInfoCard('서버 주소', getServerBaseUrl())}
+        </div>
+        <p class="status-meta">${escapeHtml(errorMessage)}</p>
+      `)}
+      ${renderStatusSection('데이터베이스', `
+        <div class="status-grid">
+          ${renderStatusCard('데이터베이스', false, '서버 연결 후 확인 가능')}
+        </div>
+      `)}
+      ${renderStatusSection('API', `
+        <div class="status-grid">
+          ${renderStatusCard('OpenAI API', false, '확인 불가')}
+          ${renderStatusCard('ElevenLabs API', false, '확인 불가')}
+          ${renderStatusCard('Voice ID', false, '확인 불가')}
+          ${renderStatusCard('모델 상태', false, '확인 불가')}
+          ${renderEverythingStatusCard(everythingStatus)}
+        </div>
+      `)}
     `;
-  } catch (error) {
-    systemStatusContainer.innerHTML = `
-      <div class="status-card danger">
-        <strong>서버 연결 실패</strong>
-        <p>${escapeHtml(error.message)}</p>
-        <p>현재 주소: ${escapeHtml(getServerBaseUrl())}</p>
-      </div>
-    `;
+    return;
   }
+
+  const service = serverStatus.services || {};
+  const database = serverStatus.database || {};
+  const models = serverStatus.models || {};
+
+  systemStatusContainer.innerHTML = `
+    ${renderStatusSection('서버', `
+      <div class="status-grid">
+        ${renderStatusCard('서버 상태', serverStatus.status === 'ok', serverStatus.status === 'ok' ? '연결됨' : serverStatus.status || '확인 필요')}
+        ${renderInfoCard('서버 주소', getServerBaseUrl())}
+      </div>
+    `)}
+    ${renderStatusSection('데이터베이스', `
+      <div class="status-grid">
+        ${renderStatusCard('데이터베이스', Boolean(database.ok), database.ok ? '연결됨' : database.message || '확인 필요')}
+      </div>
+    `)}
+    ${renderStatusSection('API', `
+      <div class="status-grid">
+        ${renderStatusCard('OpenAI API', Boolean(service.openai_api_key), service.openai_api_key ? '사용 가능' : '미설정')}
+        ${renderStatusCard('ElevenLabs API', Boolean(service.elevenlabs_api_key), service.elevenlabs_api_key ? '사용 가능' : '미설정')}
+        ${renderStatusCard('Voice ID', Boolean(service.elevenlabs_voice_id), service.elevenlabs_voice_id ? '설정됨' : '미설정')}
+        ${renderStatusCard('모델 상태', Boolean(models.hiyori_runtime), models.hiyori_runtime ? '사용 가능' : '누락')}
+        ${renderEverythingStatusCard(everythingStatus)}
+      </div>
+    `)}
+  `;
+}
+
+function renderStatusSection(title, body) {
+  return `
+    <section class="status-section">
+      <h3>${escapeHtml(title)}</h3>
+      ${body}
+    </section>
+  `;
 }
 
 function renderStatusCard(label, isOk, detail) {
@@ -201,6 +267,237 @@ function renderStatusCard(label, isOk, detail) {
       <p>${escapeHtml(detail)}</p>
     </div>
   `;
+}
+
+function renderInfoCard(label, detail) {
+  return `
+    <div class="status-card neutral">
+      <strong>${escapeHtml(label)}</strong>
+      <span>정보</span>
+      <p>${escapeHtml(detail)}</p>
+    </div>
+  `;
+}
+
+function renderEverythingStatusCard(status) {
+  const isOk = Boolean(status?.available);
+  return renderStatusCard('Everything', isOk, isOk ? '사용 가능' : '사용 불가');
+}
+
+
+function showFileOpenConfirmation(candidate) {
+  if (!candidate?.id) return;
+
+  showFileOpenCandidates({
+    request_id: 'legacy-single-candidate',
+    candidates: [candidate],
+    has_more: false,
+    next_offset: null,
+    page_size: 7,
+    message: '열 대상을 선택해 주세요.',
+  });
+}
+
+function showFileOpenCandidates(page) {
+  if (!fileOpenModal || !Array.isArray(page?.candidates) || !page.candidates.length) return;
+
+  currentFileOpenRequestToken += 1;
+  const requestToken = currentFileOpenRequestToken;
+  fileOpenConfirmInFlight = false;
+  fileOpenNextInFlight = false;
+  currentFileOpenCandidatePage = page;
+  currentFileOpenCandidate = null;
+
+  // 이전 루프의 hidden/selected/disabled/text 상태가 남지 않도록 매번 완전 초기화한다.
+  fileOpenModal.classList.add('hidden');
+
+  if (fileOpenMessage) {
+    fileOpenMessage.textContent = page.has_more
+      ? '열 대상을 선택해 주세요. 원하는 항목이 없으면 다음을 눌러 더 볼 수 있어요.'
+      : '열 대상을 선택해 주세요.';
+  }
+
+  renderFileOpenCandidateList(page.candidates);
+  updateFileOpenSelection(null);
+
+  if (fileOpenConfirmBtn) {
+    fileOpenConfirmBtn.textContent = '열기';
+    fileOpenConfirmBtn.disabled = true;
+  }
+
+  if (fileOpenNextBtn) {
+    fileOpenNextBtn.textContent = '다음';
+    fileOpenNextBtn.classList.toggle('hidden', !page.has_more);
+    fileOpenNextBtn.disabled = !page.has_more;
+  }
+
+  // 같은 이벤트 루프에서 닫힘/열림 상태가 충돌하는 것을 피하기 위해 다음 프레임에 표시한다.
+  window.requestAnimationFrame(() => {
+    if (requestToken !== currentFileOpenRequestToken) return;
+    fileOpenModal.classList.remove('hidden');
+    ipcRenderer.send('set-focusable', true);
+    ipcRenderer.send('set-ignore-mouse-events', false);
+  });
+}
+
+function renderFileOpenCandidateList(candidates) {
+  if (!fileOpenCandidateList) return;
+
+  fileOpenCandidateList.innerHTML = candidates
+    .map((candidate) => {
+      const typeLabel = candidate.is_folder
+        ? '폴더'
+        : candidate.category || formatExtensionLabel(candidate.extension);
+      const parentPath = candidate.parent_path || getParentPath(candidate.path) || '-';
+
+      return `
+        <button class="file-open-candidate-item" type="button" data-candidate-id="${escapeHtml(candidate.id)}">
+          <span class="file-open-candidate-name">${escapeHtml(candidate.name || '이름 없음')}</span>
+          <span class="file-open-candidate-meta">${escapeHtml(typeLabel)} · ${escapeHtml(parentPath)}</span>
+        </button>
+      `;
+    })
+    .join('');
+}
+
+function updateFileOpenSelection(candidate) {
+  currentFileOpenCandidate = candidate;
+
+  if (fileOpenConfirmBtn) {
+    fileOpenConfirmBtn.disabled = !candidate?.id;
+  }
+
+  if (fileOpenSelectedSummary) {
+    if (!candidate) {
+      fileOpenSelectedSummary.textContent = '선택된 항목이 없습니다.';
+      return;
+    }
+
+    const typeLabel = candidate.is_folder
+      ? '폴더'
+      : candidate.category || formatExtensionLabel(candidate.extension);
+    fileOpenSelectedSummary.textContent = `${typeLabel}을 선택했어요. 열기를 누르면 진행합니다.`;
+  }
+
+  if (fileOpenCandidateList) {
+    for (const element of fileOpenCandidateList.querySelectorAll('.file-open-candidate-item')) {
+      element.classList.toggle('selected', element.dataset.candidateId === candidate?.id);
+    }
+  }
+}
+
+function hideFileOpenConfirmation(message) {
+  currentFileOpenRequestToken += 1;
+  fileOpenConfirmInFlight = false;
+  fileOpenNextInFlight = false;
+
+  if (fileOpenModal) {
+    fileOpenModal.classList.add('hidden');
+  }
+
+  currentFileOpenCandidate = null;
+  currentFileOpenCandidatePage = null;
+
+  if (fileOpenCandidateList) fileOpenCandidateList.innerHTML = '';
+  if (fileOpenSelectedSummary) fileOpenSelectedSummary.textContent = '선택된 항목이 없습니다.';
+  if (fileOpenConfirmBtn) {
+    fileOpenConfirmBtn.disabled = true;
+    fileOpenConfirmBtn.textContent = '열기';
+  }
+  if (fileOpenNextBtn) {
+    fileOpenNextBtn.classList.add('hidden');
+    fileOpenNextBtn.disabled = true;
+    fileOpenNextBtn.textContent = '다음';
+  }
+
+  if (message) {
+    typeSubtitle(message);
+  }
+
+  if (!isDashboardOpen() && inputContainer.style.display !== 'block') {
+    ipcRenderer.send('set-focusable', false);
+    ipcRenderer.send('set-ignore-mouse-events', true, { forward: true });
+  }
+}
+
+async function confirmPendingFileOpen() {
+  if (!currentFileOpenCandidate?.id || !fileOpenConfirmBtn || fileOpenConfirmInFlight) return;
+
+  const token = currentFileOpenRequestToken;
+  const candidate = currentFileOpenCandidate;
+
+  fileOpenConfirmInFlight = true;
+  fileOpenConfirmBtn.disabled = true;
+  fileOpenConfirmBtn.textContent = '여는 중...';
+
+  try {
+    const result = await confirmFileOpen(candidate.id);
+
+    if (token !== currentFileOpenRequestToken) return;
+
+    if (result.ok) {
+      hideFileOpenConfirmation(result.message || '열었어.');
+    } else {
+      fileOpenConfirmInFlight = false;
+      typeSubtitle(result.message || '파일/폴더를 열 수 없었어.');
+    }
+  } catch (error) {
+    if (token !== currentFileOpenRequestToken) return;
+    fileOpenConfirmInFlight = false;
+    console.error('🚨 파일/폴더 열기 확인 실패:', error);
+    typeSubtitle('파일/폴더 열기 요청 중 문제가 생겼어. 서버 상태를 확인해줘.');
+  } finally {
+    if (token === currentFileOpenRequestToken && !fileOpenModal?.classList.contains('hidden')) {
+      fileOpenConfirmBtn.disabled = fileOpenConfirmInFlight || !currentFileOpenCandidate?.id;
+      fileOpenConfirmBtn.textContent = '열기';
+    }
+  }
+}
+
+async function showNextFileOpenCandidates() {
+  if (!currentFileOpenCandidatePage?.request_id || currentFileOpenCandidatePage.next_offset == null) return;
+  if (!fileOpenNextBtn || fileOpenNextInFlight) return;
+
+  const token = currentFileOpenRequestToken;
+  const requestId = currentFileOpenCandidatePage.request_id;
+  const nextOffset = currentFileOpenCandidatePage.next_offset;
+
+  fileOpenNextInFlight = true;
+  fileOpenNextBtn.disabled = true;
+  fileOpenNextBtn.textContent = '불러오는 중...';
+
+  try {
+    const response = await fetchNextFileOpenCandidates(requestId, nextOffset);
+
+    if (token !== currentFileOpenRequestToken) return;
+
+    if (response.ok && response.candidate_page) {
+      showFileOpenCandidates(response.candidate_page);
+    } else {
+      fileOpenNextInFlight = false;
+      typeSubtitle(response.message || '더 보여줄 후보가 없어.');
+    }
+  } catch (error) {
+    if (token !== currentFileOpenRequestToken) return;
+    fileOpenNextInFlight = false;
+    console.error('🚨 파일/폴더 후보 다음 페이지 조회 실패:', error);
+    typeSubtitle('다음 후보를 불러오지 못했어. 서버 상태를 확인해줘.');
+  } finally {
+    if (token === currentFileOpenRequestToken && !fileOpenModal?.classList.contains('hidden')) {
+      fileOpenNextBtn.textContent = '다음';
+      fileOpenNextBtn.disabled = fileOpenNextInFlight || !currentFileOpenCandidatePage?.has_more;
+    }
+  }
+}
+
+function getParentPath(pathValue) {
+  const rawPath = String(pathValue || '');
+  const separatorIndex = Math.max(rawPath.lastIndexOf('\\'), rawPath.lastIndexOf('/'));
+  return separatorIndex > 0 ? rawPath.slice(0, separatorIndex) : '';
+}
+
+function formatExtensionLabel(extension) {
+  return extension ? `.${extension} 파일` : '파일';
 }
 
 async function openDashboard() {
@@ -230,7 +527,6 @@ function clearHistory() {
   renderHistory();
   typeSubtitle('대화 기록을 비웠어.');
 }
-
 
 function initSettingsControls() {
   bindRangeControl(characterScaleInput, characterScaleValue, getCharacterScalePercent(), '%', (value) => {
@@ -324,7 +620,25 @@ function initUI() {
   });
 
   refreshStatusBtn?.addEventListener('click', renderSystemStatus);
+
+  fileOpenConfirmBtn?.addEventListener('click', confirmPendingFileOpen);
+  fileOpenNextBtn?.addEventListener('click', showNextFileOpenCandidates);
+  fileOpenCandidateList?.addEventListener('click', (event) => {
+    const item = event.target.closest('.file-open-candidate-item');
+    if (!item || !currentFileOpenCandidatePage) return;
+
+    const candidate = currentFileOpenCandidatePage.candidates.find((entry) => entry.id === item.dataset.candidateId);
+    if (candidate) updateFileOpenSelection(candidate);
+  });
+  fileOpenCancelBtn?.addEventListener('click', () => hideFileOpenConfirmation('좋아, 열지 않을게.'));
+  fileOpenCloseBtn?.addEventListener('click', () => hideFileOpenConfirmation('좋아, 열지 않을게.'));
+  fileOpenModal?.addEventListener('click', (event) => {
+    if (event.target === fileOpenModal) {
+      hideFileOpenConfirmation('좋아, 열지 않을게.');
+    }
+  });
 }
+
 
 module.exports = {
   initUI,
@@ -336,6 +650,8 @@ module.exports = {
   renderLedgerEntries,
   renderHistory,
   renderSystemStatus,
+  showFileOpenConfirmation,
+  showFileOpenCandidates,
   uiElementsToBlock,
   chatInput,
   inputContainer,

@@ -13,6 +13,8 @@ const {
   typeSubtitle,
   renderSchedules,
   renderLedgerEntries,
+  showFileOpenConfirmation,
+  showFileOpenCandidates,
   uiElementsToBlock,
   chatInput,
   inputContainer,
@@ -81,7 +83,7 @@ chatInput.addEventListener('keydown', (event) => {
   subtitleBox.textContent = '생각하는 중...';
   hideChatInput();
 
-  processUserMessage(userText, { renderSchedules, renderLedgerEntries }, typeSubtitle);
+  processUserMessage(userText, { renderSchedules, renderLedgerEntries, showFileOpenConfirmation, showFileOpenCandidates }, typeSubtitle);
 });
 
 initWakeWordListener(
@@ -92,7 +94,7 @@ initWakeWordListener(
   (transcribedText) => {
     if (transcribedText) {
       subtitleBox.textContent = '생각하는 중...';
-      processUserMessage(transcribedText, { renderSchedules, renderLedgerEntries }, typeSubtitle);
+      processUserMessage(transcribedText, { renderSchedules, renderLedgerEntries, showFileOpenConfirmation, showFileOpenCandidates }, typeSubtitle);
     } else {
       typeSubtitle('응? 잘 못 들었어. 다시 말해줄래?');
     }
