@@ -2,6 +2,7 @@ const { appSettings, chatHistory, saveChatHistory } = require('../storage/config
 const { updateLipSync } = require('../companion/characterEngine');
 const { playAudioWithLipSync } = require('../companion/audioPlayer');
 const { sendChatMessage } = require('./aiClient');
+const { sanitizeSpeechText } = require('../speech/speechSanitizer');
 
 function buildHistoryForServer() {
   return chatHistory
@@ -43,7 +44,12 @@ async function processUserMessage(userText, handlers, typeSubtitle) {
       showFileOpenConfirmation(data.pending_file_open);
     }
 
-    if (typeSubtitle) typeSubtitle(reply);
+    if (typeSubtitle) {
+      const subtitleText = data.pending_file_open_candidates || data.pending_file_open
+        ? sanitizeSpeechText(reply, '화면에 후보를 띄웠어. 원하는 항목을 선택해줘.')
+        : reply;
+      typeSubtitle(subtitleText);
+    }
 
     if (data.schedule_updated && renderSchedules) {
       await renderSchedules();
