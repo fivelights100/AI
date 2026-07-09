@@ -557,3 +557,1087 @@ body {
   cursor: wait;
   opacity: 0.72;
 }
+
+/* File rename candidate/confirmation modals */
+.file-rename-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.32);
+  pointer-events: auto;
+}
+
+.file-rename-card {
+  width: min(560px, calc(100vw - 48px));
+  max-height: min(720px, calc(100vh - 48px));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(25, 27, 38, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.38);
+  color: #f6f3ff;
+}
+
+.file-rename-confirm-card {
+  width: min(860px, calc(100vw - 56px));
+}
+
+.file-rename-header,
+.file-rename-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.file-rename-actions {
+  justify-content: flex-end;
+}
+
+.file-rename-header strong {
+  font-size: 16px;
+}
+
+.file-rename-x-btn {
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.file-rename-message {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.5;
+}
+
+.file-rename-candidate-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.file-rename-candidate-item {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.file-rename-candidate-item:hover,
+.file-rename-candidate-item.selected {
+  border-color: rgba(151, 124, 255, 0.9);
+  background: rgba(151, 124, 255, 0.22);
+}
+
+.file-rename-candidate-name {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 4px;
+  word-break: break-all;
+}
+
+.file-rename-candidate-meta {
+  display: block;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.file-rename-selected-summary,
+.file-rename-warning {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.file-rename-warning {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 196, 87, 0.12);
+  border: 1px solid rgba(255, 196, 87, 0.24);
+}
+
+.file-rename-confirm-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.file-rename-confirm-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.file-rename-confirm-row span {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+}
+
+.file-rename-diff-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  min-height: 180px;
+}
+
+.file-rename-diff-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.file-rename-diff-box strong {
+  font-size: 13px;
+}
+
+.file-rename-diff-box pre {
+  min-height: 150px;
+  max-height: 280px;
+  overflow: auto;
+  margin: 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.26);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.88);
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-family: Consolas, Monaco, 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+
+/* File create candidate/confirmation modals */
+.file-create-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.32);
+  pointer-events: auto;
+}
+
+.file-create-card {
+  width: min(560px, calc(100vw - 48px));
+  max-height: min(720px, calc(100vh - 48px));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(25, 27, 38, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.38);
+  color: #f6f3ff;
+}
+
+.file-create-confirm-card {
+  width: min(860px, calc(100vw - 56px));
+}
+
+.file-create-header,
+.file-create-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.file-create-actions {
+  justify-content: flex-end;
+}
+
+.file-create-header strong {
+  font-size: 16px;
+}
+
+.file-create-x-btn {
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.file-create-message {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.5;
+}
+
+.file-create-candidate-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.file-create-candidate-item {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.file-create-candidate-item:hover,
+.file-create-candidate-item.selected {
+  border-color: rgba(151, 124, 255, 0.9);
+  background: rgba(151, 124, 255, 0.22);
+}
+
+.file-create-candidate-name {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 4px;
+  word-break: break-all;
+}
+
+.file-create-candidate-meta {
+  display: block;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.file-create-selected-summary,
+.file-create-warning {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.file-create-warning {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 196, 87, 0.12);
+  border: 1px solid rgba(255, 196, 87, 0.24);
+}
+
+.file-create-confirm-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.file-create-confirm-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.file-create-confirm-row span {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+}
+
+.file-create-diff-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  min-height: 180px;
+}
+
+.file-create-diff-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.file-create-diff-box strong {
+  font-size: 13px;
+}
+
+.file-create-diff-box pre {
+  min-height: 150px;
+  max-height: 280px;
+  overflow: auto;
+  margin: 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.26);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.88);
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-family: Consolas, Monaco, 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.file-content-edit-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 11000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.32);
+  pointer-events: auto;
+}
+
+.file-content-edit-card {
+  width: min(620px, calc(100vw - 48px));
+  max-height: min(780px, calc(100vh - 48px));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(25, 27, 38, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.38);
+  color: #f6f3ff;
+}
+
+.file-content-edit-confirm-card {
+  width: min(1120px, calc(100vw - 56px));
+  max-height: min(860px, calc(100vh - 48px));
+}
+
+.file-content-edit-header,
+.file-content-edit-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.file-content-edit-actions {
+  justify-content: flex-end;
+}
+
+.file-content-edit-header strong {
+  font-size: 16px;
+}
+
+.file-content-edit-x-btn {
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.file-content-edit-message {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.5;
+}
+
+.file-content-edit-candidate-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.file-content-edit-candidate-item {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.file-content-edit-candidate-item:hover,
+.file-content-edit-candidate-item.selected {
+  border-color: rgba(151, 124, 255, 0.9);
+  background: rgba(151, 124, 255, 0.22);
+}
+
+.file-content-edit-candidate-name {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 4px;
+  word-break: break-all;
+}
+
+.file-content-edit-candidate-meta {
+  display: block;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.file-content-edit-selected-summary,
+.file-content-edit-warning {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.file-content-edit-warning {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 196, 87, 0.12);
+  border: 1px solid rgba(255, 196, 87, 0.24);
+}
+
+.file-content-edit-confirm-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.file-content-edit-confirm-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.file-content-edit-confirm-row span {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+}
+
+.file-content-edit-diff-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  min-height: 320px;
+}
+
+.file-content-edit-diff-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.file-content-edit-diff-box strong {
+  font-size: 13px;
+}
+
+.file-content-edit-diff-box pre {
+  min-height: 300px;
+  max-height: 520px;
+  overflow: auto;
+  margin: 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.26);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.88);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: Consolas, Monaco, 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.danger-btn {
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  background: rgba(255, 92, 92, 0.86);
+  color: #fff;
+  font-weight: 800;
+}
+
+.danger-btn:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+/* File delete candidate/confirmation modals */
+.file-delete-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 13000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.36);
+  pointer-events: auto;
+}
+
+.file-delete-card {
+  width: min(620px, calc(100vw - 48px));
+  max-height: min(780px, calc(100vh - 48px));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(25, 27, 38, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.38);
+  color: #f6f3ff;
+}
+
+.file-delete-confirm-card {
+  width: min(820px, calc(100vw - 56px));
+  max-height: min(820px, calc(100vh - 48px));
+}
+
+.file-delete-header,
+.file-delete-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.file-delete-actions {
+  justify-content: flex-end;
+}
+
+.file-delete-header strong {
+  font-size: 16px;
+}
+
+.file-delete-x-btn {
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.file-delete-message {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.5;
+}
+
+.file-delete-candidate-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.file-delete-candidate-item {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.file-delete-candidate-item:hover,
+.file-delete-candidate-item.selected {
+  border-color: rgba(255, 112, 112, 0.9);
+  background: rgba(255, 112, 112, 0.18);
+}
+
+.file-delete-candidate-name {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 4px;
+  word-break: break-all;
+}
+
+.file-delete-candidate-meta {
+  display: block;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.file-delete-selected-summary,
+.file-delete-warning {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.file-delete-warning {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 92, 92, 0.12);
+  border: 1px solid rgba(255, 92, 92, 0.26);
+}
+
+.file-delete-confirm-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.file-delete-confirm-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.file-delete-confirm-row span {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+}
+
+.file-delete-path-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.file-delete-path-box strong {
+  font-size: 13px;
+}
+
+.file-delete-path-box pre {
+  max-height: 240px;
+  overflow: auto;
+  margin: 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.26);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.88);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: Consolas, Monaco, 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+
+/* 파일/폴더 복사·이동 모달 */
+.file-transfer-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 13000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.36);
+  pointer-events: auto;
+}
+
+.file-transfer-card {
+  width: min(620px, calc(100vw - 48px));
+  max-height: min(780px, calc(100vh - 48px));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(25, 27, 38, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.38);
+  color: #f6f3ff;
+}
+
+.file-transfer-confirm-card {
+  width: min(820px, calc(100vw - 56px));
+  max-height: min(820px, calc(100vh - 48px));
+}
+
+.file-transfer-header,
+.file-transfer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.file-transfer-actions {
+  justify-content: flex-end;
+}
+
+.file-transfer-header strong {
+  font-size: 16px;
+}
+
+.file-transfer-x-btn {
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.file-transfer-message {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.5;
+}
+
+.file-transfer-candidate-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.file-transfer-candidate-item {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.file-transfer-candidate-item:hover,
+.file-transfer-candidate-item.selected {
+  border-color: rgba(255, 112, 112, 0.9);
+  background: rgba(255, 112, 112, 0.18);
+}
+
+.file-transfer-candidate-name {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 4px;
+  word-break: break-all;
+}
+
+.file-transfer-candidate-meta {
+  display: block;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.file-transfer-selected-summary,
+.file-transfer-warning {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.file-transfer-warning {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 92, 92, 0.12);
+  border: 1px solid rgba(255, 92, 92, 0.26);
+}
+
+.file-transfer-confirm-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.file-transfer-confirm-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.file-transfer-confirm-row span {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+}
+
+.file-transfer-path-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.file-transfer-path-box strong {
+  font-size: 13px;
+}
+
+.file-transfer-path-box pre {
+  max-height: 240px;
+  overflow: auto;
+  margin: 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.26);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.88);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: Consolas, Monaco, 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+/* 파일 시스템 설정 */
+.filesystem-settings-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.filesystem-section {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.055);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.filesystem-section.disabled {
+  opacity: 0.55;
+}
+
+.filesystem-section h3,
+.filesystem-section h4,
+.filesystem-section h5 {
+  margin: 0 0 8px;
+}
+
+.filesystem-section p {
+  margin: 4px 0 10px;
+  line-height: 1.5;
+}
+
+.filesystem-switch-row,
+.filesystem-permission-card,
+.filesystem-path-add-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.filesystem-permission-grid,
+.filesystem-safety-grid,
+.filesystem-extension-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.filesystem-permission-card,
+.filesystem-safety-card,
+.filesystem-extension-group {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.16);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.permission-lock-label {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.switch-control {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+  flex: 0 0 auto;
+}
+
+.switch-control input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch-slider {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  transition: 0.2s;
+}
+
+.switch-slider::before {
+  content: '';
+  position: absolute;
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+
+.switch-control input:checked + .switch-slider {
+  background: rgba(72, 187, 120, 0.8);
+}
+
+.switch-control input:checked + .switch-slider::before {
+  transform: translateX(22px);
+}
+
+.switch-control input:disabled + .switch-slider {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.filesystem-path-add-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.filesystem-path-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filesystem-path-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  word-break: break-all;
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.filesystem-extension-panel {
+  margin-top: 16px;
+}
+
+.filesystem-extension-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filesystem-extension-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+}
+
+.filesystem-extension-group.locked {
+  opacity: 0.65;
+}
+
+.filesystem-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10070;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.42);
+  pointer-events: auto;
+}
+
+.filesystem-modal.hidden {
+  display: none;
+}
+
+.filesystem-modal-card {
+  width: min(620px, calc(100vw - 48px));
+  max-height: calc(100vh - 64px);
+  overflow: auto;
+  border-radius: 18px;
+  background: rgba(30, 31, 40, 0.96);
+  color: #fff;
+  box-shadow: 0 22px 80px rgba(0, 0, 0, 0.35);
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.filesystem-modal-header,
+.filesystem-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.filesystem-modal-actions {
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
+.filesystem-modal-x-btn {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+.filesystem-terms-body p,
+.filesystem-warning-text {
+  line-height: 1.6;
+}
+
+.settings-error {
+  color: #ffb4b4;
+}

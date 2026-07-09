@@ -77,6 +77,7 @@
                         <button class="sub-btn active" data-target="settings-display">화면</button>
                         <button class="sub-btn" data-target="settings-sound">소리</button>
                         <button class="sub-btn" data-target="settings-system">시스템</button>
+                        <button class="sub-btn" data-target="settings-filesystem">파일 시스템</button>
                         <button class="sub-btn" data-target="settings-status">상태</button>
                     </aside>
                     <main class="main-content">
@@ -141,6 +142,20 @@
                                 <p>서버 주소, 서버 상태, 데이터베이스, API 상태는 이제 상태 탭에서 한 번에 확인할 수 있습니다.</p>
                             </div>
                         </div>
+
+                        <div id="settings-filesystem" class="sub-content hidden">
+                            <div class="content-header">
+                                <div>
+                                    <h2>파일 시스템</h2>
+                                    <p class="content-description">AI가 파일과 폴더를 다루는 권한과 안전 설정을 관리합니다.</p>
+                                </div>
+                                <button id="refresh-filesystem-settings-btn" class="secondary-btn">새로고침</button>
+                            </div>
+
+                            <div id="filesystem-settings-container" class="filesystem-settings-container scrollable-area">
+                                <p>파일 시스템 설정을 불러오는 중...</p>
+                            </div>
+                        </div>
                         <div id="settings-status" class="sub-content hidden">
                             <div class="content-header">
                                 <div>
@@ -192,6 +207,322 @@
         <button id="file-open-cancel-btn" class="secondary-btn">취소</button>
         <button id="file-open-next-btn" class="secondary-btn hidden">다음</button>
         <button id="file-open-confirm-btn" class="primary-btn" disabled>열기</button>
+      </div>
+    </div>
+  </div>
+
+
+
+  <div id="file-rename-modal" class="file-rename-modal hidden">
+    <div class="file-rename-card">
+      <div class="file-rename-header">
+        <strong>이름 변경 대상 선택</strong>
+        <button id="file-rename-close-btn" class="file-rename-x-btn" aria-label="닫기">&times;</button>
+      </div>
+      <p id="file-rename-message" class="file-rename-message">이름을 변경할 대상을 선택해 주세요.</p>
+      <div id="file-rename-candidate-list" class="file-rename-candidate-list" role="listbox" aria-label="이름 변경 후보 목록"></div>
+      <p id="file-rename-selected-summary" class="file-rename-selected-summary">선택된 항목이 없습니다.</p>
+      <div class="file-rename-actions">
+        <button id="file-rename-cancel-btn" class="secondary-btn">취소</button>
+        <button id="file-rename-next-btn" class="secondary-btn hidden">다음</button>
+        <button id="file-rename-preview-btn" class="primary-btn" disabled>변경 내용 확인</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="file-rename-confirm-modal" class="file-rename-modal hidden">
+    <div class="file-rename-card file-rename-confirm-card">
+      <div class="file-rename-header">
+        <strong>변경 내용 확인</strong>
+        <button id="file-rename-confirm-close-btn" class="file-rename-x-btn" aria-label="닫기">&times;</button>
+      </div>
+      <div class="file-rename-confirm-grid">
+        <div class="file-rename-confirm-row">
+          <span>작업 종류</span>
+          <strong id="file-rename-confirm-operation">이름 변경</strong>
+        </div>
+        <div class="file-rename-confirm-row">
+          <span>대상</span>
+          <strong id="file-rename-confirm-target">파일 또는 폴더</strong>
+        </div>
+      </div>
+      <div class="file-rename-diff-grid">
+        <div class="file-rename-diff-box">
+          <strong>변경 전</strong>
+          <pre id="file-rename-confirm-before">-</pre>
+        </div>
+        <div class="file-rename-diff-box">
+          <strong>변경 후</strong>
+          <pre id="file-rename-confirm-after">-</pre>
+        </div>
+      </div>
+      <p id="file-rename-confirm-warning" class="file-rename-warning">적용 후 이름이 변경됩니다.</p>
+      <div class="file-rename-actions">
+        <button id="file-rename-confirm-cancel-btn" class="secondary-btn">취소</button>
+        <button id="file-rename-back-btn" class="secondary-btn">뒤로</button>
+        <button id="file-rename-apply-btn" class="primary-btn" disabled>적용</button>
+      </div>
+    </div>
+  </div>
+
+
+
+  <div id="file-create-modal" class="file-create-modal hidden">
+    <div class="file-create-card">
+      <div class="file-create-header">
+        <strong>생성 위치 선택</strong>
+        <button id="file-create-close-btn" class="file-create-x-btn" aria-label="닫기">&times;</button>
+      </div>
+      <p id="file-create-message" class="file-create-message">생성 위치를 선택해 주세요.</p>
+      <div id="file-create-candidate-list" class="file-create-candidate-list" role="listbox" aria-label="생성 위치 후보 목록"></div>
+      <p id="file-create-selected-summary" class="file-create-selected-summary">선택된 위치가 없습니다.</p>
+      <div class="file-create-actions">
+        <button id="file-create-cancel-btn" class="secondary-btn">취소</button>
+        <button id="file-create-next-btn" class="secondary-btn hidden">다음</button>
+        <button id="file-create-preview-btn" class="primary-btn" disabled>생성 내용 확인</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="file-create-confirm-modal" class="file-create-modal hidden">
+    <div class="file-create-card file-create-confirm-card">
+      <div class="file-create-header">
+        <strong>생성 내용 확인</strong>
+        <button id="file-create-confirm-close-btn" class="file-create-x-btn" aria-label="닫기">&times;</button>
+      </div>
+      <div class="file-create-confirm-grid">
+        <div class="file-create-confirm-row">
+          <span>작업 종류</span>
+          <strong id="file-create-confirm-operation">생성</strong>
+        </div>
+        <div class="file-create-confirm-row">
+          <span>대상</span>
+          <strong id="file-create-confirm-target">파일 또는 폴더</strong>
+        </div>
+      </div>
+      <div class="file-create-diff-grid">
+        <div class="file-create-diff-box">
+          <strong>변경 전</strong>
+          <pre id="file-create-confirm-before">없음</pre>
+        </div>
+        <div class="file-create-diff-box">
+          <strong>변경 후</strong>
+          <pre id="file-create-confirm-after">-</pre>
+        </div>
+      </div>
+      <p id="file-create-confirm-warning" class="file-create-warning">적용 후 새 항목이 생성됩니다.</p>
+      <div class="file-create-actions">
+        <button id="file-create-confirm-cancel-btn" class="secondary-btn">취소</button>
+        <button id="file-create-back-btn" class="secondary-btn">뒤로</button>
+        <button id="file-create-apply-btn" class="primary-btn" disabled>적용</button>
+      </div>
+    </div>
+  </div>
+
+
+
+  <div id="file-content-edit-modal" class="file-content-edit-modal hidden">
+    <div class="file-content-edit-card">
+      <div class="file-content-edit-header">
+        <strong>내용 수정 파일 선택</strong>
+        <button id="file-content-edit-close-btn" class="file-content-edit-x-btn" aria-label="닫기">&times;</button>
+      </div>
+      <p id="file-content-edit-message" class="file-content-edit-message">내용을 수정할 파일을 선택해 주세요.</p>
+      <div id="file-content-edit-candidate-list" class="file-content-edit-candidate-list" role="listbox" aria-label="내용 수정 후보 목록"></div>
+      <p id="file-content-edit-selected-summary" class="file-content-edit-selected-summary">선택된 파일이 없습니다.</p>
+      <div class="file-content-edit-actions">
+        <button id="file-content-edit-cancel-btn" class="secondary-btn">취소</button>
+        <button id="file-content-edit-next-btn" class="secondary-btn hidden">다음</button>
+        <button id="file-content-edit-preview-btn" class="primary-btn" disabled>변경 내용 확인</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="file-content-edit-confirm-modal" class="file-content-edit-modal hidden">
+    <div class="file-content-edit-card file-content-edit-confirm-card">
+      <div class="file-content-edit-header">
+        <strong>내용 수정 확인</strong>
+        <button id="file-content-edit-confirm-close-btn" class="file-content-edit-x-btn" aria-label="닫기">&times;</button>
+      </div>
+      <div class="file-content-edit-confirm-grid">
+        <div class="file-content-edit-confirm-row">
+          <span>작업 종류</span>
+          <strong id="file-content-edit-confirm-operation">내용 수정</strong>
+        </div>
+        <div class="file-content-edit-confirm-row">
+          <span>대상</span>
+          <strong id="file-content-edit-confirm-target">파일</strong>
+        </div>
+      </div>
+      <div class="file-content-edit-diff-grid">
+        <div class="file-content-edit-diff-box">
+          <strong>변경 전</strong>
+          <pre id="file-content-edit-confirm-before"></pre>
+        </div>
+        <div class="file-content-edit-diff-box">
+          <strong>변경 후</strong>
+          <pre id="file-content-edit-confirm-after"></pre>
+        </div>
+      </div>
+      <p id="file-content-edit-confirm-warning" class="file-content-edit-warning">적용 후 파일 내용이 변경됩니다.</p>
+      <div class="file-content-edit-actions">
+        <button id="file-content-edit-confirm-cancel-btn" class="secondary-btn">취소</button>
+        <button id="file-content-edit-back-btn" class="secondary-btn">뒤로</button>
+        <button id="file-content-edit-apply-btn" class="primary-btn" disabled>적용</button>
+      </div>
+    </div>
+  </div>
+
+
+  <div id="file-delete-modal" class="file-delete-modal hidden">
+    <div class="file-delete-card">
+      <div class="file-delete-header">
+        <strong>삭제 항목 선택</strong>
+        <button id="file-delete-close-btn" class="file-delete-x-btn" aria-label="닫기">&times;</button>
+      </div>
+      <p id="file-delete-message" class="file-delete-message">삭제할 파일 또는 폴더를 선택해 주세요.</p>
+      <div id="file-delete-candidate-list" class="file-delete-candidate-list" role="listbox" aria-label="삭제 후보 목록"></div>
+      <p id="file-delete-selected-summary" class="file-delete-selected-summary">선택된 항목이 없습니다.</p>
+      <div class="file-delete-actions">
+        <button id="file-delete-cancel-btn" class="secondary-btn">취소</button>
+        <button id="file-delete-next-btn" class="secondary-btn hidden">다음</button>
+        <button id="file-delete-preview-btn" class="primary-btn" disabled>삭제 내용 확인</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="file-delete-confirm-modal" class="file-delete-modal hidden">
+    <div class="file-delete-card file-delete-confirm-card">
+      <div class="file-delete-header">
+        <strong>삭제 확인</strong>
+        <button id="file-delete-confirm-close-btn" class="file-delete-x-btn" aria-label="닫기">&times;</button>
+      </div>
+      <div class="file-delete-confirm-grid">
+        <div class="file-delete-confirm-row">
+          <span>작업 종류</span>
+          <strong id="file-delete-confirm-operation">삭제</strong>
+        </div>
+        <div class="file-delete-confirm-row">
+          <span>삭제 방식</span>
+          <strong id="file-delete-confirm-method">휴지통으로 이동</strong>
+        </div>
+        <div class="file-delete-confirm-row">
+          <span>대상</span>
+          <strong id="file-delete-confirm-target">파일 또는 폴더</strong>
+        </div>
+      </div>
+      <div class="file-delete-path-box">
+        <strong>삭제할 항목</strong>
+        <pre id="file-delete-confirm-path">-</pre>
+      </div>
+      <p id="file-delete-confirm-warning" class="file-delete-warning">선택한 항목이 휴지통으로 이동됩니다.</p>
+      <div class="file-delete-actions">
+        <button id="file-delete-confirm-cancel-btn" class="secondary-btn">취소</button>
+        <button id="file-delete-back-btn" class="secondary-btn">뒤로</button>
+        <button id="file-delete-apply-btn" class="danger-btn" disabled>휴지통으로 이동</button>
+      </div>
+    </div>
+  </div>
+
+
+  <div id="file-transfer-source-modal" class="file-transfer-modal hidden">
+    <div class="file-transfer-card">
+      <div class="file-transfer-header">
+        <strong>복사/이동 원본 선택</strong>
+        <button id="file-transfer-source-close-btn" class="file-transfer-x-btn" aria-label="닫기">&times;</button>
+      </div>
+      <p id="file-transfer-source-message" class="file-transfer-message">복사/이동할 파일 또는 폴더를 선택해 주세요.</p>
+      <div id="file-transfer-source-candidate-list" class="file-transfer-candidate-list" role="listbox" aria-label="복사/이동 원본 후보 목록"></div>
+      <p id="file-transfer-source-selected-summary" class="file-transfer-selected-summary">선택된 원본이 없습니다.</p>
+      <div class="file-transfer-actions">
+        <button id="file-transfer-source-cancel-btn" class="secondary-btn">취소</button>
+        <button id="file-transfer-source-next-btn" class="secondary-btn hidden">다음</button>
+        <button id="file-transfer-source-continue-btn" class="primary-btn" disabled>목적지 선택</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="file-transfer-destination-modal" class="file-transfer-modal hidden">
+    <div class="file-transfer-card">
+      <div class="file-transfer-header">
+        <strong>복사/이동 위치 선택</strong>
+        <button id="file-transfer-destination-close-btn" class="file-transfer-x-btn" aria-label="닫기">&times;</button>
+      </div>
+      <p id="file-transfer-destination-message" class="file-transfer-message">복사/이동할 목적지 폴더를 선택해 주세요.</p>
+      <div id="file-transfer-destination-candidate-list" class="file-transfer-candidate-list" role="listbox" aria-label="복사/이동 목적지 후보 목록"></div>
+      <p id="file-transfer-destination-selected-summary" class="file-transfer-selected-summary">선택된 목적지가 없습니다.</p>
+      <div class="file-transfer-actions">
+        <button id="file-transfer-destination-cancel-btn" class="secondary-btn">취소</button>
+        <button id="file-transfer-destination-back-btn" class="secondary-btn">뒤로</button>
+        <button id="file-transfer-destination-next-btn" class="secondary-btn hidden">다음</button>
+        <button id="file-transfer-destination-preview-btn" class="primary-btn" disabled>작업 내용 확인</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="file-transfer-confirm-modal" class="file-transfer-modal hidden">
+    <div class="file-transfer-card file-transfer-confirm-card">
+      <div class="file-transfer-header">
+        <strong>복사/이동 확인</strong>
+        <button id="file-transfer-confirm-close-btn" class="file-transfer-x-btn" aria-label="닫기">&times;</button>
+      </div>
+      <div class="file-transfer-confirm-grid">
+        <div class="file-transfer-confirm-row">
+          <span>작업 종류</span>
+          <strong id="file-transfer-confirm-operation">복사/이동</strong>
+        </div>
+        <div class="file-transfer-confirm-row">
+          <span>대상</span>
+          <strong id="file-transfer-confirm-target">파일 또는 폴더</strong>
+        </div>
+      </div>
+      <div class="file-transfer-path-box">
+        <strong>원본</strong>
+        <pre id="file-transfer-confirm-source">-</pre>
+      </div>
+      <div class="file-transfer-path-box">
+        <strong>변경 후 위치</strong>
+        <pre id="file-transfer-confirm-destination">-</pre>
+      </div>
+      <p id="file-transfer-confirm-warning" class="file-transfer-warning">작업 내용을 확인한 뒤 적용해 주세요.</p>
+      <div class="file-transfer-actions">
+        <button id="file-transfer-confirm-cancel-btn" class="secondary-btn">취소</button>
+        <button id="file-transfer-back-btn" class="secondary-btn">뒤로</button>
+        <button id="file-transfer-apply-btn" class="primary-btn" disabled>적용</button>
+      </div>
+    </div>
+  </div>
+
+
+  <div id="filesystem-terms-modal" class="filesystem-modal hidden">
+    <div class="filesystem-modal-card filesystem-terms-card">
+      <div class="filesystem-modal-header">
+        <strong>파일 시스템 기능 약관</strong>
+        <button id="filesystem-terms-close-btn" class="filesystem-modal-x-btn" aria-label="닫기">&times;</button>
+      </div>
+      <div class="filesystem-terms-body">
+        <p>이 기능은 AI가 사용자의 컴퓨터에서 파일과 폴더를 검색, 열기, 이름 변경, 생성, 내용 수정, 복사, 이동, 삭제할 수 있도록 돕습니다.</p>
+        <p>모든 수정/삭제/이동 작업은 후보 선택과 확인 팝업을 거치지만, 승인 후에는 실제 파일 시스템에 영향을 줄 수 있습니다.</p>
+        <p>삭제는 휴지통 이동으로 처리되며, 제한 경로와 위험 확장자는 계속 보호됩니다.</p>
+        <p>중요 파일은 반드시 팝업 내용을 직접 확인한 뒤 진행해 주세요.</p>
+      </div>
+      <div class="filesystem-modal-actions">
+        <button id="filesystem-terms-cancel-btn" class="secondary-btn">취소</button>
+        <button id="filesystem-terms-accept-btn" class="primary-btn" disabled>7초 후 동의 가능</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="filesystem-delete-warning-modal" class="filesystem-modal hidden">
+    <div class="filesystem-modal-card">
+      <div class="filesystem-modal-header">
+        <strong>삭제 권한 경고</strong>
+        <button id="filesystem-delete-warning-close-btn" class="filesystem-modal-x-btn" aria-label="닫기">&times;</button>
+      </div>
+      <p class="filesystem-warning-text">삭제 권한을 켜면 AI가 후보를 찾고, 사용자가 승인한 파일 또는 폴더를 휴지통으로 이동할 수 있습니다. 제한 경로와 위험 확장자는 계속 차단됩니다.</p>
+      <div class="filesystem-modal-actions">
+        <button id="filesystem-delete-warning-cancel-btn" class="secondary-btn">취소</button>
+        <button id="filesystem-delete-warning-accept-btn" class="danger-btn">삭제 권한 켜기</button>
       </div>
     </div>
   </div>

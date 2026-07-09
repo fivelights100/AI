@@ -1,11 +1,13 @@
-const FILE_EXTENSION_PATTERN = /\b[^\s`'"<>]+\.(pdf|txt|md|docx?|xlsx?|pptx?|png|jpe?g|gif|mp3|mp4|zip|js|ts|rs|py|json|ya?ml|html|css)\b/gi;
+const FILE_EXTENSION_PATTERN = /\b[^\s`'"<>]+\.(pdf|txt|md|docx?|xlsx?|pptx?|png|jpe?g|gif|mp3|mp4|zip|js|ts|rs|py|json|ya?ml|html|css|exe|msi|bat|cmd|ps1|vbs|scr|lnk|dll|sys|reg)\b/gi;
 const WINDOWS_PATH_PATTERN = /[a-zA-Z]:[\\/][^\n\r]+/g;
 const NETWORK_OR_UNIX_PATH_PATTERN = /(?:\\\\|\/)[^\n\r]+/g;
+const CODE_BLOCK_PATTERN = /```[\s\S]*?```/g;
 const BACKTICK_BLOCK_PATTERN = /`[^`]*`/g;
 
 function sanitizeSpeechText(text, fallback = '화면에 결과를 정리해뒀어.') {
   const source = String(text || '');
   const cleaned = source
+    .replace(CODE_BLOCK_PATTERN, '')
     .replace(BACKTICK_BLOCK_PATTERN, '')
     .replace(WINDOWS_PATH_PATTERN, '')
     .replace(NETWORK_OR_UNIX_PATH_PATTERN, '')

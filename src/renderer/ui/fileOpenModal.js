@@ -1,6 +1,5 @@
-const { ipcRenderer } = require('electron');
 const { fetchNextFileOpenCandidates, confirmFileOpen } = require('../files/fileOpenClient');
-const { escapeHtml } = require('../shared/html');
+const { setMouseInteractive, getParentPath, formatExtensionLabel, renderCandidateButtons, markSelectedCandidate } = require('./fileOperationUi');
 
 let fileOpenModal = null;
 let fileOpenMessage = null;
@@ -112,21 +111,12 @@ function handleCandidateClick(event) {
 function renderCandidateList(candidates) {
   if (!fileOpenCandidateList) return;
 
-  fileOpenCandidateList.innerHTML = candidates
-    .map((candidate) => {
-      const typeLabel = candidate.is_folder
-        ? '폴더'
-        : candidate.category || formatExtensionLabel(candidate.extension);
-      const parentPath = candidate.parent_path || getParentPath(candidate.path) || '-';
-
-      return `
-        <button class="file-open-candidate-item" type="button" data-candidate-id="${escapeHtml(candidate.id)}">
-          <span class="file-open-candidate-name">${escapeHtml(candidate.name || '이름 없음')}</span>
-          <span class="file-open-candidate-meta">${escapeHtml(typeLabel)} · ${escapeHtml(parentPath)}</span>
-        </button>
-      `;
-    })
-    .join('');
+  fileOpenCandidateList.innerHTML = renderCandidateButtons(candidates, {
+    itemClass: 'file-open-candidate-item',
+    nameClass: 'file-open-candidate-name',
+    metaClass: 'file-open-candidate-meta',
+    emptyName: '이름 없음',
+  });
 }
 
 function updateSelection(candidate) {
@@ -147,11 +137,7 @@ function updateSelection(candidate) {
     }
   }
 
-  if (fileOpenCandidateList) {
-    for (const element of fileOpenCandidateList.querySelectorAll('.file-open-candidate-item')) {
-      element.classList.toggle('selected', element.dataset.candidateId === candidate?.id);
-    }
-  }
+  markSelectedCandidate(fileOpenCandidateList, '.file-open-candidate-item', candidate?.id);
 }
 
 async function confirmPendingFileOpen() {
@@ -259,24 +245,6 @@ function resetModalState({ incrementToken = false, hide = false, clearDom = fals
   }
 }
 
-function setMouseInteractive(enabled) {
-  ipcRenderer.send('set-focusable', enabled);
-  if (enabled) {
-    ipcRenderer.send('set-ignore-mouse-events', false);
-  } else {
-    ipcRenderer.send('set-ignore-mouse-events', true, { forward: true });
-  }
-}
-
-function getParentPath(pathValue) {
-  const rawPath = String(pathValue || '');
-  const separatorIndex = Math.max(rawPath.lastIndexOf('\\'), rawPath.lastIndexOf('/'));
-  return separatorIndex > 0 ? rawPath.slice(0, separatorIndex) : '';
-}
-
-function formatExtensionLabel(extension) {
-  return extension ? `.${extension} 파일` : '파일';
-}
 
 module.exports = {
   initFileOpenModal,

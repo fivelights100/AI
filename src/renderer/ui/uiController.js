@@ -18,7 +18,13 @@ const { setActiveMasterVolume } = require('../companion/audioPlayer');
 const { getSchedules, deleteSchedule } = require('../schedules/scheduleClient');
 const { getLedgerEntries, deleteLedgerEntry } = require('../ledger/ledgerClient');
 const { renderSystemStatus } = require('./statusView');
+const { initFilesystemSettingsView, renderFilesystemSettings } = require('./filesystemSettingsView');
 const { initFileOpenModal, showFileOpenConfirmation, showFileOpenCandidates } = require('./fileOpenModal');
+const { initFileRenameModal, showFileRenameCandidates } = require('./fileRenameModal');
+const { initFileCreateModal, showFileCreateCandidates } = require('./fileCreateModal');
+const { initFileContentEditModal, showFileContentEditCandidates } = require('./fileContentEditModal');
+const { initFileDeleteModal, showFileDeleteCandidates } = require('./fileDeleteModal');
+const { initFileTransferModal, showFileTransferCandidates } = require('./fileTransferModal');
 const { getServerBaseUrl, setServerBaseUrl } = require('../config/appConfig');
 const { escapeHtml } = require('../shared/html');
 
@@ -45,6 +51,19 @@ const masterVolumeValue = document.getElementById('master-volume-value');
 const lipSyncSensitivityInput = document.getElementById('lip-sync-sensitivity-input');
 const lipSyncSensitivityValue = document.getElementById('lip-sync-sensitivity-value');
 const fileOpenModal = document.getElementById('file-open-modal');
+const fileRenameModal = document.getElementById('file-rename-modal');
+const fileRenameConfirmModal = document.getElementById('file-rename-confirm-modal');
+const fileCreateModal = document.getElementById('file-create-modal');
+const fileCreateConfirmModal = document.getElementById('file-create-confirm-modal');
+const fileContentEditModal = document.getElementById('file-content-edit-modal');
+const fileContentEditConfirmModal = document.getElementById('file-content-edit-confirm-modal');
+const fileDeleteModal = document.getElementById('file-delete-modal');
+const fileDeleteConfirmModal = document.getElementById('file-delete-confirm-modal');
+const fileTransferSourceModal = document.getElementById('file-transfer-source-modal');
+const fileTransferDestinationModal = document.getElementById('file-transfer-destination-modal');
+const fileTransferConfirmModal = document.getElementById('file-transfer-confirm-modal');
+const filesystemTermsModal = document.getElementById('filesystem-terms-modal');
+const filesystemDeleteWarningModal = document.getElementById('filesystem-delete-warning-modal');
 
 const uiElementsToBlock = [
   subtitleBox,
@@ -52,6 +71,19 @@ const uiElementsToBlock = [
   chatInput,
   dashboardOverlay,
   fileOpenModal,
+  fileRenameModal,
+  fileRenameConfirmModal,
+  fileCreateModal,
+  fileCreateConfirmModal,
+  fileContentEditModal,
+  fileContentEditConfirmModal,
+  fileDeleteModal,
+  fileDeleteConfirmModal,
+  fileTransferSourceModal,
+  fileTransferDestinationModal,
+  fileTransferConfirmModal,
+  filesystemTermsModal,
+  filesystemDeleteWarningModal,
 ];
 
 let typingTimer = null;
@@ -170,7 +202,7 @@ async function openDashboard() {
   ipcRenderer.send('set-focusable', true);
   ipcRenderer.send('set-ignore-mouse-events', false);
   renderHistory();
-  await Promise.allSettled([renderSchedules(), renderLedgerEntries(), renderSystemStatus()]);
+  await Promise.allSettled([renderSchedules(), renderLedgerEntries(), renderSystemStatus(), renderFilesystemSettings()]);
 }
 
 function closeDashboard() {
@@ -246,6 +278,12 @@ function initUI() {
 
   initSettingsControls();
   initFileOpenModal({ typeSubtitle, isDashboardOpen, inputContainer });
+  initFileRenameModal({ typeSubtitle, isDashboardOpen, inputContainer });
+  initFileCreateModal({ typeSubtitle, isDashboardOpen, inputContainer });
+  initFileContentEditModal({ typeSubtitle, isDashboardOpen, inputContainer });
+  initFileDeleteModal({ typeSubtitle, isDashboardOpen, inputContainer });
+  initFileTransferModal({ typeSubtitle, isDashboardOpen, inputContainer });
+  initFilesystemSettingsView({ typeSubtitle });
 
   closeDashboardBtn?.addEventListener('click', closeDashboard);
   clearHistoryBtn?.addEventListener('click', clearHistory);
@@ -280,7 +318,7 @@ function initUI() {
     const normalizedUrl = setServerBaseUrl(serverUrlInput?.value);
     if (serverUrlInput) serverUrlInput.value = normalizedUrl;
     typeSubtitle('서버 주소를 저장했어. 앱을 재시작하면 Live2D 모델 주소도 새 설정을 사용해.');
-    await Promise.allSettled([renderSchedules(), renderLedgerEntries(), renderSystemStatus()]);
+    await Promise.allSettled([renderSchedules(), renderLedgerEntries(), renderSystemStatus(), renderFilesystemSettings()]);
   });
 
   refreshStatusBtn?.addEventListener('click', renderSystemStatus);
@@ -297,8 +335,14 @@ module.exports = {
   renderLedgerEntries,
   renderHistory,
   renderSystemStatus,
+  renderFilesystemSettings,
   showFileOpenConfirmation,
   showFileOpenCandidates,
+  showFileRenameCandidates,
+  showFileCreateCandidates,
+  showFileContentEditCandidates,
+  showFileDeleteCandidates,
+  showFileTransferCandidates,
   uiElementsToBlock,
   chatInput,
   inputContainer,
